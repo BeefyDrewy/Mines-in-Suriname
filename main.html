@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+  <title>Suriname Mining Risks</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <button class="menu-toggle" id="menuToggle">☰</button>
+    <h1 class="header-title">Mines in Suriname</h1>
+    <div class="header-spacer"></div>
+  </header>
+
+  <!-- Disclaimer Modal Popup -->
+  <div id="disclaimerModal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeDisclaimer">&times;</button>
+      <h2>Data Disclaimer</h2>
+      <p>This website provides estimates only. The data shown is not 100% accurate but can be used to:</p>
+      <ul>
+        <li>Understand general mining patterns</li>
+        <li>Identify potential risk areas</li>
+        <li>Estimate environmental impact zones</li>
+      </ul>
+      <p>For official data, please consult government sources.</p>
+      <button class="modal-button" id="acceptDisclaimer">I Understand</button>
+    </div>
+  </div>
+
+  <div class="map-container" id="mapContainer">
+    <div id="map"></div>
+    
+    <!-- Map Controls -->
+    <button class="map-help-btn" id="helpBtn" title="Show Legend">?</button>
+    <button class="map-fullscreen-btn" id="fullscreenBtn" title="Fullscreen">⛶</button>
+    <button class="map-back-btn" id="backBtn" title="Exit Fullscreen" style="display: none;">← Back</button>
+
+    <!-- Map Legend (Hidden by default) -->
+    <div class="legend" id="mapLegend" style="display: none;">
+      <strong>Map Legend</strong><br/>
+      <span style="color:green">●</span> Legal mine<br/>
+      <span style="color:red">●</span> Illegal mine<br/>
+      <span style="color:#800000">■</span> High pollution<br/>
+      <span style="color:#ff9933">■</span> Low pollution<br/>
+      <span style="color:red">Heat</span> = Mercury zones
+    </div>
+  </div>
+
+  <div class="content-container">
+    <div class="content-box">
+      <!-- <div class="panel-content"> -->
+        <h1>Recent Mining News</h1>
+        <ul class="news-list">
+          <li>New gold mining regulations announced</li>
+          <li>Mercury pollution levels rising in Lawa area</li>
+          <li>Government cracks down on illegal mining</li>
+          <li>Rosebel mine expansion approved</li>
+        </ul>
+      </div>
+    <div class="content-box">
+      <h1>Suriname Mining Risks</h1>
+      <p>
+        This website provides insights into the mining risks faced by Suriname, focusing on environmental, safety, and socio-economic aspects. 
+        We aim to raise awareness and promote responsible mining practices for a sustainable future. 
+        This platform mainly focuses on Suriname, which is why you will only see markers and data points on the Suriname map.
+      </p>
+    </div>
+
+    <div class="content-box profile-box">
+      <div class="profile-content">
+        <img src="Andrew.jpg" alt="Andrew's Profile Picture" />
+        <div class="profile-text">
+          <h2>About Me</h2>
+          <p>
+            My name is Andrew, a passionate electrical engineering student from Suriname with a strong interest in technology, data, and environmental issues.
+            I created this platform as a way to combine my technical skills with my concern for my country's future.
+          </p>
+        </div>
+      </div>
+    </div>
+
+   <!-- In your main.html, update the contact form section -->
+<div class="contact-box">
+  <h2>Contact Me</h2>
+  <form id="contactForm">
+    <div class="form-group">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required>
+    </div>
+    <div class="form-group">
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required>
+    </div>
+    <div class="form-group">
+      <label for="message">Message:</label>
+      <textarea id="message" name="message" rows="4" required></textarea>
+    </div>
+    <button type="submit">Send Message</button>
+  </form>
+  <div id="formResponse"></div>
+</div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
