@@ -92,47 +92,174 @@ function fetchMiningNews() {
     'https://news.google.com/rss/search?q=Suriname+bauxite&hl=en-US&gl=US&ceid=US:en'
   ];
 
-  const corsProxy = 'https://api.rss2json.com/v1/api.json?rss_url=';
+  // Multiple CORS proxies to try
+  const corsProxies = [
+    'https://api.rss2json.com/v1/api.json?rss_url=',
+    'https://cors-anywhere.herokuapp.com/',
+    'https://allorigins.win/raw?url='
+  ];
   
-  // Fetch news for the Recent Mining News section
-  Promise.all(newsUrls.map(url => 
-    fetch(corsProxy + encodeURIComponent(url))
-      .then(response => response.json())
-      .catch(error => console.error('Error fetching news:', error))
-  ))
-  .then(results => {
-    const allNews = [];
+  // Try first proxy
+  tryFetchWithProxy(newsUrls, corsProxies, 0);
+}
+
+// Function to try fetching with different proxies
+function tryFetchWithProxy(newsUrls, proxies, proxyIndex) {
+  if (proxyIndex >= proxies.length) {
+    console.warn('All proxies failed, using fallback news');
+    loadFallbackNews();
+    return;
+  }
+
+  const corsProxy = proxies[proxyIndex];
+  const fetchPromises = newsUrls.map(url => {
+    let fetchUrl;
     
-    results.forEach(result => {
-      if (result && result.items) {
-        allNews.push(...result.items);
-      }
-    });
-
-    // Sort by publication date (most recent first)
-    allNews.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-
-    // Get top 5 news items
-    const topNews = allNews.slice(0, 5);
-
-    // Update the Recent Mining News section
-    const newsListElement = document.querySelector('.content-box .news-list');
-    if (newsListElement) {
-      newsListElement.innerHTML = '';
-      topNews.forEach(newsItem => {
-        const listItem = document.createElement('li');
-        listItem.innerHTML = `<a href="${newsItem.link}" target="_blank" class="news-item-link">${newsItem.title}</a><br><small>${new Date(newsItem.pubDate).toLocaleDateString()}</small>`;
-        newsListElement.appendChild(listItem);
-      });
+    if (corsProxy.includes('rss2json')) {
+      fetchUrl = corsProxy + encodeURIComponent(url);
+    } else {
+      fetchUrl = corsProxy + encodeURIComponent(url);
     }
-
-    // Store news data for mining sites
-    window.globalMiningNews = topNews;
     
-    // Update mining sites with relevant news
-    updateMiningSitesWithNews(topNews);
-  })
-  .catch(error => console.error('Error processing news:', error));
+    return fetch(fetchUrl, { 
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+      })
+      .catch(error => null); // Return null on error to continue
+  });
+
+  Promise.all(fetchPromises)
+    .then(results => {
+      const allNews = [];
+      let successCount = 0;
+      
+      results.forEach(result => {
+        if (result && result.items && result.items.length > 0) {
+          allNews.push(...result.items);
+          successCount++;
+        }
+      });
+
+      // If we got news from at least one source, process it
+      if (successCount > 0 && allNews.length > 0) {
+        // Sort by publication date (most recent first)
+        allNews.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+
+        // Get top 5 news items
+        const topNews = allNews.slice(0, 5);
+
+        // Update the Recent Mining News section
+        const newsListElement = document.querySelector('.content-box .news-list');
+        if (newsListElement) {
+          newsListElement.innerHTML = '';
+          topNews.forEach(newsItem => {
+            const listItem = document.createElement('li');
+            const newsDate = new Date(newsItem.pubDate).toLocaleDateString();
+            listItem.innerHTML = `<a href="${newsItem.link}" target="_blank" class="news-item-link">${newsItem.title}</a><br><small>${newsDate}</small>`;
+            newsListElement.appendChild(listItem);
+          });
+        }
+
+        // Store news data for mining sites
+        window.globalMiningNews = topNews;
+        
+        // Update mining sites with relevant news
+        updateMiningSitesWithNews(topNews);
+        
+        // Cache the news locally for offline access
+        localStorage.setItem('miningNews', JSON.stringify({
+          data: topNews,
+          timestamp: Date.now()
+        }));
+      } else {
+        // Try next proxy
+        tryFetchWithProxy(newsUrls, proxies, proxyIndex + 1);
+      }
+    })
+    .catch(error => {
+      console.error(`Proxy ${proxyIndex} failed:`, error);
+      // Try next proxy
+      tryFetchWithProxy(newsUrls, proxies, proxyIndex + 1);
+    });
+}
+
+// Load fallback news from cache or hardcoded data
+function loadFallbackNews() {
+  // Try to load from localStorage first
+  const cachedNews = localStorage.getItem('miningNews');
+  if (cachedNews) {
+    try {
+      const newsData = JSON.parse(cachedNews);
+      const topNews = newsData.data;
+      
+      // Update the Recent Mining News section with cached data
+      const newsListElement = document.querySelector('.content-box .news-list');
+      if (newsListElement) {
+        newsListElement.innerHTML = '';
+        topNews.forEach(newsItem => {
+          const listItem = document.createElement('li');
+          const newsDate = new Date(newsItem.pubDate).toLocaleDateString();
+          listItem.innerHTML = `<a href="${newsItem.link}" target="_blank" class="news-item-link">${newsItem.title}</a><br><small>${newsDate}</small>`;
+          newsListElement.appendChild(listItem);
+        });
+      }
+      
+      window.globalMiningNews = topNews;
+      updateMiningSitesWithNews(topNews);
+      console.log('Loaded news from cache');
+      return;
+    } catch (e) {
+      console.error('Error parsing cached news:', e);
+    }
+  }
+  
+  // Final fallback: hardcoded recent mining news
+  const fallbackNews = [
+    {
+      title: "Suriname Mining Industry Overview",
+      link: "https://news.google.com/",
+      pubDate: new Date().toISOString()
+    },
+    {
+      title: "Gold Mining Operations in Suriname",
+      link: "https://news.google.com/",
+      pubDate: new Date().toISOString()
+    },
+    {
+      title: "Environmental Concerns in Suriname Mining",
+      link: "https://news.google.com/",
+      pubDate: new Date().toISOString()
+    },
+    {
+      title: "Bauxite Extraction in Suriname",
+      link: "https://news.google.com/",
+      pubDate: new Date().toISOString()
+    },
+    {
+      title: "Mining Regulations and Compliance",
+      link: "https://news.google.com/",
+      pubDate: new Date().toISOString()
+    }
+  ];
+  
+  // Update the Recent Mining News section with fallback data
+  const newsListElement = document.querySelector('.content-box .news-list');
+  if (newsListElement) {
+    newsListElement.innerHTML = '';
+    fallbackNews.forEach(newsItem => {
+      const listItem = document.createElement('li');
+      listItem.innerHTML = `<a href="${newsItem.link}" target="_blank" class="news-item-link">${newsItem.title}</a><br><small>Unable to fetch live news - showing fallback</small>`;
+      newsListElement.appendChild(listItem);
+    });
+  }
+  
+  console.warn('Using fallback news data');
 }
 
 // Function to update mining sites with relevant news
