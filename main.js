@@ -79,7 +79,87 @@ document.addEventListener('DOMContentLoaded', function() {
       mapLegend.style.display = 'none';
     }
   });
+
+  // Fetch mining news from Google News RSS
+  fetchMiningNews();
 });
+
+// Function to fetch mining news from Google News RSS
+function fetchMiningNews() {
+  const newsUrls = [
+    'https://news.google.com/rss/search?q=Suriname+mining&hl=en-US&gl=US&ceid=US:en',
+    'https://news.google.com/rss/search?q=Suriname+gold+mining&hl=en-US&gl=US&ceid=US:en',
+    'https://news.google.com/rss/search?q=Suriname+bauxite&hl=en-US&gl=US&ceid=US:en'
+  ];
+
+  const corsProxy = 'https://api.rss2json.com/v1/api.json?rss_url=';
+  
+  // Fetch news for the Recent Mining News section
+  Promise.all(newsUrls.map(url => 
+    fetch(corsProxy + encodeURIComponent(url))
+      .then(response => response.json())
+      .catch(error => console.error('Error fetching news:', error))
+  ))
+  .then(results => {
+    const allNews = [];
+    
+    results.forEach(result => {
+      if (result && result.items) {
+        allNews.push(...result.items);
+      }
+    });
+
+    // Sort by publication date (most recent first)
+    allNews.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+
+    // Get top 5 news items
+    const topNews = allNews.slice(0, 5);
+
+    // Update the Recent Mining News section
+    const newsListElement = document.querySelector('.content-box .news-list');
+    if (newsListElement) {
+      newsListElement.innerHTML = '';
+      topNews.forEach(newsItem => {
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `<a href="${newsItem.link}" target="_blank" class="news-item-link">${newsItem.title}</a><br><small>${new Date(newsItem.pubDate).toLocaleDateString()}</small>`;
+        newsListElement.appendChild(listItem);
+      });
+    }
+
+    // Store news data for mining sites
+    window.globalMiningNews = topNews;
+    
+    // Update mining sites with relevant news
+    updateMiningSitesWithNews(topNews);
+  })
+  .catch(error => console.error('Error processing news:', error));
+}
+
+// Function to update mining sites with relevant news
+function updateMiningSitesWithNews(allNews) {
+  const mineKeywords = {
+    'Rosebel': ['Rosebel', 'gold mine'],
+    'Merian': ['Merian', 'gold'],
+    'Bakhuis': ['Bakhuis', 'bauxite', 'Chinalco'],
+    'Saramacca': ['Saramacca', 'exploration'],
+    'Villa Brazil': ['Villa Brazil', 'illegal'],
+    'Brownsberg': ['Brownsberg', 'mercury', 'pollution'],
+    'Moengo': ['Moengo', 'bauxite']
+  };
+
+  // For each mine, find relevant news
+  Object.keys(mineKeywords).forEach(mineName => {
+    const keywords = mineKeywords[mineName];
+    const relevantNews = allNews.filter(newsItem => {
+      const title = newsItem.title.toLowerCase();
+      return keywords.some(keyword => title.includes(keyword.toLowerCase()));
+    });
+
+    if (relevantNews.length > 0) {
+      window[mineName + '_news'] = relevantNews;
+    }
+  });
+}
 
 // Initialize map with scroll wheel disabled by default
 var map = L.map('map', {
@@ -105,6 +185,9 @@ map.scrollWheelZoom.disable();
 fetch('mining_sites.json')
   .then(response => response.json())
   .then(data => {
+    // Store mining sites data globally for later updates
+    window.miningSitesData = data;
+    
     data.forEach(site => {
       var markerColor = site.type === 'legal' ? 'green' : 'red';
       var marker = L.circleMarker([site.lat, site.lng], {
@@ -113,10 +196,54 @@ fetch('mining_sites.json')
         fillColor: markerColor,
         fillOpacity: 0.8
       }).addTo(map);
-      marker.bindPopup(`<strong>${site.name}</strong><br>Type: ${site.type}`);
+      
+      // Create popup with updateable content
+      marker.on('popupopen', function() {
+        updateSitePopup(site, marker);
+      });
+      
+      // Initial popup content
+      var popupContent = `<strong>${site.name}</strong><br>Type: ${site.type}<br><em>Loading news...</em>`;
+      
+      // Add static news links if available
+      if (site.news && site.news.length > 0) {
+        popupContent += '<br><hr><strong>Related News:</strong><br>';
+        site.news.forEach(newsItem => {
+          popupContent += `<a href="${newsItem.url}" target="_blank" class="news-link">${newsItem.title}</a><br>`;
+        });
+      }
+      
+      marker.bindPopup(popupContent);
     });
   })
   .catch(err => console.error('Error loading mining sites:', err));
+
+// Function to update site popup with dynamically fetched news
+function updateSitePopup(site, marker) {
+  var popupContent = `<strong>${site.name}</strong><br>Type: ${site.type}`;
+  
+  // Add static news from JSON
+  if (site.news && site.news.length > 0) {
+    popupContent += '<br><hr><strong>Related News (Static):</strong><br>';
+    site.news.forEach(newsItem => {
+      popupContent += `<a href="${newsItem.url}" target="_blank" class="news-link">${newsItem.title}</a><br>`;
+    });
+  }
+  
+  // Add dynamically fetched news
+  const siteNameForKey = site.name.split(' ')[0]; // Get first word of site name for lookup
+  const dynamicNews = window[siteNameForKey + '_news'];
+  
+  if (dynamicNews && dynamicNews.length > 0) {
+    popupContent += '<br><hr><strong>Latest Internet News:</strong><br>';
+    dynamicNews.slice(0, 3).forEach(newsItem => {
+      const newsDate = new Date(newsItem.pubDate).toLocaleDateString();
+      popupContent += `<a href="${newsItem.link}" target="_blank" class="news-link">${newsItem.title}</a><br><small>${newsDate}</small><br>`;
+    });
+  }
+  
+  marker.setPopupContent(popupContent);
+}
 
 // Gradient pollution zones around key sites (squares fading out)
 function createRiskSquare(lat, lng, sizeKm, color, opacity) {

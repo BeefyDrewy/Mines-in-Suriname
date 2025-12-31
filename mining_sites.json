@@ -16,19 +16,40 @@
     "name": "Bakhuis Bauxite Area",
     "type": "legal",
     "lat": 4.900,
-    "lng": -56.500
+    "lng": -56.500,
+    "news": [
+      {
+        "title": "Bauxiet Overeenkomst Chinalco - Santokhi niet blij uitspraken Richano Newmont verlengt tot 2039",
+        "url": "https://regionieuws.tv/2024/11/25/bauxietovereenkomst-chinalco-santokhi-niet-blij-uitspraken-richano-newmont-verlengt-tot-2039/",
+        "image": "https://regionieuws.tv/2024/11/25/bauxietovereenkomst-chinalco-santokhi-niet-blij-uitspraken-richano-newmont-verlengt-tot-2039/"
+      }
+    ]
   },
   {
     "name": "Saramacca Exploration Area",
     "type": "legal",
     "lat": 5.000,
-    "lng": -55.367
+    "lng": -55.367,
+    "news": [
+      {
+        "title": "IAMGOLD selling Rosebel and Saramacca gold mines in Suriname to China's Zijin Mining",
+        "url": "https://im-mining.com/2022/10/18/iamgold-selling-rosebel-and-saramacca-gold-mines-in-suriname-to-chinas-zijin-mining/#:~:text=IAMGOLD%20selling%20Rosebel%20and%20Saramacca%20Gold%20Mines%20in%20Suriname%20to%20China's%20Zijin%20mining",
+        "image": "https://im-mining.com/2022/10/18/iamgold-selling-rosebel-and-saramacca-gold-mines-in-suriname-to-chinas-zijin-mining/#:~:text=IAMGOLD%20selling%20Rosebel%20and%20Saramacca%20Gold%20Mines%20in%20Suriname%20to%20China's%20Zijin%20mining"
+      }
+    ]
   },
   {
     "name": "Villa Brazil (illegal)",
     "type": "illegal",
     "lat": 4.800,
-    "lng": -56.000
+    "lng": -56.000,
+    "news": [
+      {
+        "title": "Moving frontiers in the Amazon. Brazilian small-scale gold miners in Suriname",
+        "url": "https://scispace.com/pdf/moving-frontiers-in-the-amazon-brazilian-small-scale-gold-4czlw0y7xi.pdf",
+        "image": "https://scispace.com/pdf/moving-frontiers-in-the-amazon-brazilian-small-scale-gold-4czlw0y7xi.pdf"
+      }
+    ]
   },
  
   {
